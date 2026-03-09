@@ -536,9 +536,10 @@ function addSlot(type) {
     hdr.appendChild(xBtn);
     block.appendChild(hdr);
 
+    block.appendChild(field('Starting Location', makeSelect(`f${n}-loc`, DATA.locations)));
     block.appendChild(row2(
-      field('Starting Location', makeSelect(`f${n}-loc`, DATA.locations)),
-      field('# of Dribbles', makeSelect(`f${n}-dribbles`, DATA.dribbleCount))
+      field('Dribble Right', makeSelect(`f${n}-dr`, DATA.dribbleCount)),
+      field('Dribble Left', makeSelect(`f${n}-dl`, DATA.dribbleCount))
     ));
 
     block.appendChild(field('Primary Moves', makeChecklist(`f${n}`, DATA.primaryMoves)));
@@ -571,7 +572,10 @@ function addSlot(type) {
       field('Scoring Location', makeSelect(`s${n}-score`, DATA.locations))
     ));
 
-    block.appendChild(field('# of Dribbles', makeSelect(`s${n}-dribbles`, DATA.dribbleCount)));
+    block.appendChild(row2(
+      field('Dribble Right', makeSelect(`s${n}-dr`, DATA.dribbleCount)),
+      field('Dribble Left', makeSelect(`s${n}-dl`, DATA.dribbleCount))
+    ));
 
     block.appendChild(field('Primary Moves', makeChecklist(`s${n}`, DATA.primaryMoves)));
 
@@ -623,7 +627,8 @@ function generate() {
     const fCardId = `fcard-${n}`;
     finCards += `<div class="drill-card-wrap" id="${fCardId}"><button class="remove-card" onclick="document.getElementById('${fCardId}').remove()">✕</button><div class="drill-card finisher">
       ${valField(v(`f${n}-loc`), 'Starting Location')}
-      ${valField(v(`f${n}-dribbles`), '# of Dribbles')}
+      ${valField(v(`f${n}-dr`) ? v(`f${n}-dr`) + ' dribble(s)' : '', 'Dribble Right')}
+      ${valField(v(`f${n}-dl`) ? v(`f${n}-dl`) + ' dribble(s)' : '', 'Dribble Left')}
       <div class="drill-field">
         <div class="drill-field-label">Primary Moves</div>
         <div class="drill-field-value">${tagsHtml(primary)}</div>
@@ -648,7 +653,8 @@ function generate() {
     shotCards += `<div class="drill-card-wrap" id="${sCardId}"><button class="remove-card" onclick="document.getElementById('${sCardId}').remove()">✕</button><div class="drill-card shooting">
       ${valField(v(`s${n}-start`), 'Starting Location')}
       ${valField(v(`s${n}-score`), 'Scoring Location')}
-      ${valField(v(`s${n}-dribbles`), '# of Dribbles')}
+      ${valField(v(`s${n}-dr`) ? v(`s${n}-dr`) + ' dribble(s)' : '', 'Dribble Right')}
+      ${valField(v(`s${n}-dl`) ? v(`s${n}-dl`) + ' dribble(s)' : '', 'Dribble Left')}
       <div class="drill-field">
         <div class="drill-field-label">Primary Moves</div>
         <div class="drill-field-value">${tagsHtml(primary)}</div>
