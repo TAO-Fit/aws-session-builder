@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Session Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f5f0;
+    --gray1: #1a1a1a;
+    --gray2: #2a2a2a;
+    --gray3: #3a3a3a;
+    --gray4: #888;
+    --accent: #e8e0d0;
+    --line: rgba(255,255,255,0.08);
+  }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  .app { display: grid; grid-template-columns: 400px 1fr; min-height: 100vh; }
+
+  .panel {
+    background: var(--gray1);
+    border-right: 1px solid var(--line);
+    padding: 32px 28px;
+    overflow-y: auto;
+    max-height: 100vh;
+    position: sticky;
+    top: 0;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gray4);
+    margin-bottom: 6px;
+  }
+
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 32px;
+  }
+
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--gray4);
+    margin-bottom: 12px;
+    margin-top: 28px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+  }
+
+  .section-label:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+
+  .slot-block {
+    background: var(--gray2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .slot-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gray4);
+    margin-bottom: 12px;
+  }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .field-row.single { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gray4);
+  }
+
+  .field select {
+    background: var(--gray3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 7px 28px 7px 10px;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  .field select:focus { outline: none; border-color: var(--accent); }
+  .field select option { background: #2a2a2a; }
+
+  .checklist-wrap {
+    background: var(--gray3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 2px 0;
+  }
+
+  .check-item input[type="checkbox"] {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.1s;
+  }
+
+  .check-item input[type="checkbox"]:checked {
+    background: var(--white);
+    border-color: var(--white);
+  }
+
+  .check-item input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 1px;
+    width: 5px;
+    height: 8px;
+    border: 2px solid var(--black);
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+  }
+
+  .check-item span {
+    font-size: 12px;
+    color: var(--white);
+    user-select: none;
+  }
+
+  .add-slot {
+    background: none;
+    border: 1px dashed rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: var(--gray4);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 10px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 4px;
+  }
+  .add-slot:hover { border-color: rgba(255,255,255,0.3); color: var(--white); }
+
+  .generate-btn {
+    width: 100%;
+    background: var(--white);
+    color: var(--black);
+    border: none;
+    border-radius: 6px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    padding: 14px;
+    cursor: pointer;
+    margin-top: 28px;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .generate-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .generate-btn:active { transform: translateY(0); }
+
+  .output { padding: 40px 48px; background: var(--black); }
+
+  .output-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .output-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 3px;
+    line-height: 1;
+  }
+
+  .print-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 8px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .print-btn:hover { background: rgba(255,255,255,0.08); }
+
+  .targets-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+  }
+
+  .targets-table th {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    padding: 12px 16px;
+    text-align: center;
+    border-bottom: 2px solid rgba(255,255,255,0.15);
+  }
+
+  .targets-table th:first-child { text-align: left; }
+  .targets-table th.tier-beginner { color: #aaa; }
+  .targets-table th.tier-intermediate { color: #ccc; }
+  .targets-table th.tier-advanced { color: var(--white); }
+
+  .targets-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .targets-table td:first-child {
+    text-align: left;
+    color: var(--accent);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+
+  .targets-table tr:last-child td { border-bottom: none; }
+
+  .details-section { margin-top: 8px; }
+
+  .details-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .drill-card {
+    background: var(--gray1);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: grid;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .drill-card.finisher { grid-template-columns: repeat(4, 1fr); }
+  .drill-card.shooting { grid-template-columns: repeat(3, 1fr) repeat(3, 1fr); }
+
+  .drill-field { display: flex; flex-direction: column; gap: 6px; }
+
+  .drill-field-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray4);
+  }
+
+  .drill-field-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--white);
+    line-height: 1.5;
+  }
+
+  .drill-field-value.empty {
+    color: var(--gray4);
+    font-style: italic;
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .move-tag {
+    display: inline-block;
+    background: var(--gray2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 12px;
+    margin: 2px 2px 2px 0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--gray4);
+  }
+
+  .empty-state .big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+    opacity: 0.3;
+  }
+
+  .empty-state p { font-size: 13px; opacity: 0.6; }
+
+  @media print {
+    .panel, .print-btn { display: none !important; }
+    .app { grid-template-columns: 1fr; }
+    .output { padding: 20px; }
+    body { background: white; color: black; }
+    .output-title, .details-heading { color: black; }
+    .targets-table th, .targets-table td { color: black !important; border-color: #ccc; }
+    .drill-card { background: #f5f5f5; border-color: #ccc; }
+    .drill-field-label { color: #666; }
+    .drill-field-value { color: black; }
+    .move-tag { background: #eee; border-color: #ccc; color: black; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="panel">
+    <div class="logo">AUSTIN WALDORF SCHOOL</div>
+    <div class="panel-title">SESSION<br>BUILDER</div>
+
+    <div class="section-label">FINISHERS</div>
+    <div id="finisher-slots"></div>
+    <button class="add-slot" onclick="addSlot('finisher')">+ Add Finisher Drill</button>
+
+    <div class="section-label">SHOOTING</div>
+    <div id="shooting-slots"></div>
+    <button class="add-slot" onclick="addSlot('shooting')">+ Add Shooting Drill</button>
+
+    <button class="generate-btn" onclick="generate()">GENERATE PLAN</button>
+  </aside>
+
+  <main class="output">
+    <div class="output-header">
+      <div class="output-title">SUNDAY SESSION<br>INDIVIDUAL WORK — 45 MIN</div>
+      <button class="print-btn" onclick="window.print()">PRINT</button>
+    </div>
+    <div id="output-content">
+      <div class="empty-state">
+        <div class="big">AWS</div>
+        <p>Make your selections and hit Generate Plan</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const DATA = {
+  locations: ["Top of key","Wings","Corners","Short corners","Free throw line","Elbows","Slot / elbows extended","Blocks","Front of rim","45 degrees"],
+  primaryMoves: ["Jab step","Shot fake","Pass fake","Rip-through","Front pivot","Reverse pivot","Onside step","Cross step"],
+  counterMoves: ["No","Pro hop","Euro step","Spin","Stride stop"],
+  shootingCounterMoves: ["No","Spin","Stride stop","Side step","Step back","Jump stop","Pull up","Pro hop"],
+  finishes: ["Inside hand","Outside hand","Layup","Finger roll","Reverse layup","Power layup","Up and under","High glass finish"],
+  dribbleCount: ["1","2","3"],
+};
+
+const TARGETS = [
+  { label:"Form Shooting", beginner:"50 makes", intermediate:"50 right / 10 left", advanced:"50 makes / hand" },
+  { label:"Finishers",     beginner:"5 makes / hand", intermediate:"8 makes / hand", advanced:"10 makes / hand" },
+  { label:"Free Throws",   beginner:"15 makes", intermediate:"20 makes", advanced:"25 makes" },
+  { label:"Shooting",      beginner:"5 makes / spot", intermediate:"8 makes / spot", advanced:"10 makes / spot" },
+];
+
+let fc = 0, sc = 0;
+
+function makeSelect(id, opts) {
+  const s = document.createElement('select');
+  s.id = id;
+  const blank = document.createElement('option');
+  blank.value = ''; blank.textContent = 'Select...';
+  s.appendChild(blank);
+  opts.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o; opt.textContent = o;
+    s.appendChild(opt);
+  });
+  return s;
+}
+
+function makeChecklist(prefix, items) {
+  const wrap = document.createElement('div');
+  wrap.className = 'checklist-wrap';
+  items.forEach((move, i) => {
+    const lbl = document.createElement('label');
+    lbl.className = 'check-item';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = `${prefix}-${i}`;
+    cb.value = move;
+    const span = document.createElement('span');
+    span.textContent = move;
+    lbl.appendChild(cb);
+    lbl.appendChild(span);
+    wrap.appendChild(lbl);
+  });
+  return wrap;
+}
+
+function field(labelText, el) {
+  const w = document.createElement('div');
+  w.className = 'field';
+  const l = document.createElement('label');
+  l.textContent = labelText;
+  w.appendChild(l);
+  w.appendChild(el);
+  return w;
+}
+
+function row2(...items) {
+  const r = document.createElement('div');
+  r.className = 'field-row';
+  items.forEach(i => r.appendChild(i));
+  return r;
+}
+
+function addSlot(type) {
+  if (type === 'finisher') {
+    fc++;
+    const n = fc;
+    const block = document.createElement('div');
+    block.className = 'slot-block';
+
+    const num = document.createElement('div');
+    num.className = 'slot-number';
+    num.textContent = `DRILL ${n}`;
+    block.appendChild(num);
+
+    block.appendChild(row2(
+      field('Starting Location', makeSelect(`f${n}-loc`, DATA.locations)),
+      field('# of Dribbles', makeSelect(`f${n}-dribbles`, DATA.dribbleCount))
+    ));
+
+    block.appendChild(field('Primary Moves', makeChecklist(`f${n}`, DATA.primaryMoves)));
+    block.appendChild(field('Counter Move', makeSelect(`f${n}-counter`, DATA.counterMoves)));
+    block.appendChild(field('Finish', makeChecklist(`f${n}-fin`, DATA.finishes)));
+
+    document.getElementById('finisher-slots').appendChild(block);
+
+  } else {
+    sc++;
+    const n = sc;
+    const block = document.createElement('div');
+    block.className = 'slot-block';
+
+    const num = document.createElement('div');
+    num.className = 'slot-number';
+    num.textContent = `DRILL ${n}`;
+    block.appendChild(num);
+
+    block.appendChild(row2(
+      field('Starting Location', makeSelect(`s${n}-start`, DATA.locations)),
+      field('Scoring Location', makeSelect(`s${n}-score`, DATA.locations))
+    ));
+
+    block.appendChild(field('# of Dribbles', makeSelect(`s${n}-dribbles`, DATA.dribbleCount)));
+
+    block.appendChild(field('Primary Moves', makeChecklist(`s${n}`, DATA.primaryMoves)));
+
+    block.appendChild(field('Counter Move', makeSelect(`s${n}-counter`, DATA.shootingCounterMoves)));
+
+    document.getElementById('shooting-slots').appendChild(block);
+  }
+}
+
+function getChecked(prefix, items) {
+  return items
+    .map((_, i) => document.getElementById(`${prefix}-${i}`))
+    .filter(cb => cb && cb.checked)
+    .map(cb => cb.value);
+}
+
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+function tagsHtml(arr) {
+  if (!arr.length) return `<span class="drill-field-value empty">None selected</span>`;
+  return arr.map(m => `<span class="move-tag">${m}</span>`).join('');
+}
+
+function valField(val, label) {
+  return `<div class="drill-field">
+    <div class="drill-field-label">${label}</div>
+    <div class="drill-field-value ${!val ? 'empty' : ''}">${val || 'Not set'}</div>
+  </div>`;
+}
+
+function generate() {
+  let html = `<table class="targets-table"><thead><tr>
+    <th></th>
+    <th class="tier-beginner">BEGINNER</th>
+    <th class="tier-intermediate">INTERMEDIATE</th>
+    <th class="tier-advanced">ADVANCED</th>
+  </tr></thead><tbody>`;
+
+  TARGETS.forEach(r => {
+    html += `<tr><td>${r.label}</td><td>${r.beginner}</td><td>${r.intermediate}</td><td>${r.advanced}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Finishers
+  let finCards = '';
+  for (let n = 1; n <= fc; n++) {
+    const primary = getChecked(`f${n}`, DATA.primaryMoves);
+    const finishes = getChecked(`f${n}-fin`, DATA.finishes);
+    finCards += `<div class="drill-card finisher">
+      ${valField(v(`f${n}-loc`), 'Starting Location')}
+      ${valField(v(`f${n}-dribbles`), '# of Dribbles')}
+      <div class="drill-field">
+        <div class="drill-field-label">Primary Moves</div>
+        <div class="drill-field-value">${tagsHtml(primary)}</div>
+      </div>
+      ${valField(v(`f${n}-counter`), 'Counter Move')}
+      <div class="drill-field">
+        <div class="drill-field-label">Finish</div>
+        <div class="drill-field-value">${tagsHtml(finishes)}</div>
+      </div>
+    </div>`;
+  }
+
+  if (finCards) {
+    html += `<div class="details-section"><div class="details-heading">FINISHERS</div>${finCards}</div>`;
+  }
+
+  // Shooting
+  let shotCards = '';
+  for (let n = 1; n <= sc; n++) {
+    const primary = getChecked(`s${n}`, DATA.primaryMoves);
+    shotCards += `<div class="drill-card shooting">
+      ${valField(v(`s${n}-start`), 'Starting Location')}
+      ${valField(v(`s${n}-score`), 'Scoring Location')}
+      ${valField(v(`s${n}-dribbles`), '# of Dribbles')}
+      <div class="drill-field">
+        <div class="drill-field-label">Primary Moves</div>
+        <div class="drill-field-value">${tagsHtml(primary)}</div>
+      </div>
+      ${valField(v(`s${n}-counter`), 'Counter Move')}
+    </div>`;
+  }
+
+  if (shotCards) {
+    html += `<div class="details-section" style="margin-top:28px"><div class="details-heading">SHOOTING</div>${shotCards}</div>`;
+  }
+
+  document.getElementById('output-content').innerHTML = html;
+}
+
+addSlot('finisher');
+addSlot('shooting');
+</script>
+</body>
+</html>
