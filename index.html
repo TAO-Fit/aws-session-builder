@@ -593,8 +593,8 @@ function addSlot(type) {
 
     block.appendChild(field('Starting Location', makeSelect(`f${n}-loc`, DATA.locations)));
     block.appendChild(row2(
-      field('Dribble Right', makeSelect(`f${n}-dr`, DATA.dribbleCount)),
-      field('Dribble Left', makeSelect(`f${n}-dl`, DATA.dribbleCount))
+      field('Dribble Left', makeSelect(`f${n}-dl`, DATA.dribbleCount)),
+      field('Dribble Right', makeSelect(`f${n}-dr`, DATA.dribbleCount))
     ));
 
     block.appendChild(field('Primary Moves', makeChecklist(`f${n}`, DATA.primaryMoves)));
@@ -628,8 +628,8 @@ function addSlot(type) {
     ));
 
     block.appendChild(row2(
-      field('Dribble Right', makeSelect(`s${n}-dr`, DATA.dribbleCount)),
-      field('Dribble Left', makeSelect(`s${n}-dl`, DATA.dribbleCount))
+      field('Dribble Left', makeSelect(`s${n}-dl`, DATA.dribbleCount)),
+      field('Dribble Right', makeSelect(`s${n}-dr`, DATA.dribbleCount))
     ));
 
     block.appendChild(field('Primary Moves', makeChecklist(`s${n}`, DATA.primaryMoves)));
