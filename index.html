@@ -1016,45 +1016,53 @@ function copyPlan() {
   const output = document.getElementById('output-content');
   if (!output) return;
 
-  let text = 'SUNDAY SESSION — INDIVIDUAL WORK (45 MIN)\n';
-  text += '='.repeat(48) + '\n\n';
+  function drillLines(card) {
+    const lines = [];
+    card.querySelectorAll('.drill-field').forEach(f => {
+      const val = f.querySelector('.drill-field-value');
+      if (!val) return;
+      // Collect tag values or plain text
+      const tags = val.querySelectorAll('.move-tag');
+      if (tags.length) {
+        lines.push('  ' + Array.from(tags).map(t => t.textContent.trim()).join(', '));
+      } else {
+        const t = val.textContent.trim();
+        if (t) lines.push('  ' + t);
+      }
+    });
+    return lines.join('\n');
+  }
+
+  let text = 'AWS HOOPS — SKILLS SESSION\n';
+  text += '='.repeat(40) + '\n\n';
 
   // Targets table
   text += 'TARGETS\n';
-  text += '-'.repeat(48) + '\n';
+  text += '-'.repeat(40) + '\n';
   const rows = output.querySelectorAll('.targets-table tbody tr');
   rows.forEach(row => {
     const cells = row.querySelectorAll('td');
     if (cells.length) {
-      text += `${cells[0].textContent.padEnd(20)}${cells[1].textContent.padEnd(20)}${cells[2].textContent.padEnd(22)}${cells[3].textContent}\n`;
+      text += `${cells[0].textContent.padEnd(18)}${cells[1].textContent.padEnd(20)}${cells[2].textContent.padEnd(22)}${cells[3].textContent}\n`;
     }
   });
 
   // Finisher cards
-  const finSection = output.querySelector('.details-section');
-  if (finSection) {
-    text += '\nFINISHERS\n' + '-'.repeat(48) + '\n';
-    finSection.querySelectorAll('.drill-card').forEach((card, i) => {
+  const sections = output.querySelectorAll('.details-section');
+  if (sections.length > 0) {
+    text += '\nFINISHERS\n' + '-'.repeat(40) + '\n';
+    sections[0].querySelectorAll('.drill-card').forEach((card, i) => {
       text += `\nDrill ${i+1}\n`;
-      card.querySelectorAll('.drill-field').forEach(f => {
-        const lbl = f.querySelector('.drill-field-label');
-        const val = f.querySelector('.drill-field-value');
-        if (lbl && val) text += `  ${lbl.textContent}: ${val.textContent.trim()}\n`;
-      });
+      text += drillLines(card) + '\n';
     });
   }
 
   // Shooting cards
-  const sections = output.querySelectorAll('.details-section');
   if (sections.length > 1) {
-    text += '\nSHOOTING\n' + '-'.repeat(48) + '\n';
+    text += '\nSHOOTING\n' + '-'.repeat(40) + '\n';
     sections[1].querySelectorAll('.drill-card').forEach((card, i) => {
       text += `\nDrill ${i+1}\n`;
-      card.querySelectorAll('.drill-field').forEach(f => {
-        const lbl = f.querySelector('.drill-field-label');
-        const val = f.querySelector('.drill-field-value');
-        if (lbl && val) text += `  ${lbl.textContent}: ${val.textContent.trim()}\n`;
-      });
+      text += drillLines(card) + '\n';
     });
   }
 
