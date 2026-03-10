@@ -141,6 +141,30 @@
   .copy-btn:hover { background: rgba(255,255,255,0.08); }
   .copy-btn.copied { border-color: #6bcb77; color: #6bcb77; }
 
+  .save-load-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .save-btn, .load-btn {
+    flex: 1;
+    background: none;
+    border: 1px solid rgba(212,175,55,0.4);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .save-btn:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); color: var(--gold); }
+  .load-btn:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); color: var(--gold); }
+  .save-btn.saved { border-color: #6bcb77; color: #6bcb77; }
+
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
   .field-row.single { grid-template-columns: 1fr; }
 
@@ -545,6 +569,11 @@
     <div id="shooting-slots"></div>
     <button class="add-slot" onclick="addSlot('shooting')">+ Add Shooting Drill</button>
 
+    <div class="save-load-row">
+      <button class="save-btn" id="save-btn" onclick="saveSession()">SAVE SESSION</button>
+      <label class="load-btn" for="load-input">LOAD SESSION</label>
+      <input type="file" id="load-input" accept=".json" style="display:none" onchange="loadSession(event)">
+    </div>
     <button class="generate-btn" onclick="generate()">GENERATE PLAN</button>
   </aside>
 
@@ -672,6 +701,7 @@ function addSlot(type) {
     const n = sc;
     const block = document.createElement('div');
     block.className = 'slot-block';
+    block.id = `shooting-${n}`;
 
     const hdr = document.createElement('div');
     hdr.className = 'slot-header';
@@ -834,6 +864,111 @@ function copyPlan() {
     btn.classList.add('copied');
     setTimeout(() => { btn.textContent = 'COPY TEXT'; btn.classList.remove('copied'); }, 2000);
   });
+}
+
+function saveSession() {
+  const session = { finishers: [], shooting: [] };
+
+  for (let n = 1; n <= fc; n++) {
+    const block = document.getElementById(`finisher-${n}`);
+    if (!block) continue;
+    session.finishers.push({
+      loc: v(`f${n}-loc`),
+      dr: v(`f${n}-dr`),
+      dl: v(`f${n}-dl`),
+      primary: getChecked(`f${n}`, DATA.primaryMoves),
+      counter: getChecked(`f${n}-cm`, DATA.counterMoves),
+      finish: getChecked(`f${n}-fin`, DATA.finishes),
+    });
+  }
+
+  for (let n = 1; n <= sc; n++) {
+    const block = document.getElementById(`shooting-${n}`);
+    if (!block) continue;
+    session.shooting.push({
+      start: v(`s${n}-start`),
+      score: v(`s${n}-score`),
+      dr: v(`s${n}-dr`),
+      dl: v(`s${n}-dl`),
+      primary: getChecked(`s${n}`, DATA.primaryMoves),
+      counter: getChecked(`s${n}-cm`, DATA.shootingCounterMoves),
+    });
+  }
+
+  const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `aws-session-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'SAVED!';
+  btn.classList.add('saved');
+  setTimeout(() => { btn.textContent = 'SAVE SESSION'; btn.classList.remove('saved'); }, 2000);
+}
+
+function setSelect(id, val) {
+  const el = document.getElementById(id);
+  if (el && val) el.value = val;
+}
+
+function setChecked(prefix, items, values) {
+  items.forEach((_, i) => {
+    const cb = document.getElementById(`${prefix}-${i}`);
+    if (cb) cb.checked = values.includes(cb.value);
+  });
+}
+
+function loadSession(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const session = JSON.parse(e.target.result);
+
+      // Clear existing slots
+      document.getElementById('finisher-slots').innerHTML = '';
+      document.getElementById('shooting-slots').innerHTML = '';
+      fc = 0; sc = 0;
+
+      // Rebuild finisher slots
+      session.finishers.forEach((data, i) => {
+        addSlot('finisher');
+        const n = i + 1;
+        setTimeout(() => {
+          setSelect(`f${n}-loc`, data.loc);
+          setSelect(`f${n}-dr`, data.dr);
+          setSelect(`f${n}-dl`, data.dl);
+          setChecked(`f${n}`, DATA.primaryMoves, data.primary || []);
+          setChecked(`f${n}-cm`, DATA.counterMoves, data.counter || []);
+          setChecked(`f${n}-fin`, DATA.finishes, data.finish || []);
+        }, 50);
+      });
+
+      // Rebuild shooting slots
+      session.shooting.forEach((data, i) => {
+        addSlot('shooting');
+        const n = i + 1;
+        setTimeout(() => {
+          setSelect(`s${n}-start`, data.start);
+          setSelect(`s${n}-score`, data.score);
+          setSelect(`s${n}-dr`, data.dr);
+          setSelect(`s${n}-dl`, data.dl);
+          setChecked(`s${n}`, DATA.primaryMoves, data.primary || []);
+          setChecked(`s${n}-cm`, DATA.shootingCounterMoves, data.counter || []);
+        }, 50);
+      });
+
+    } catch(err) {
+      alert('Could not load session file. Make sure it is a valid AWS session file.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 addSlot('finisher');
