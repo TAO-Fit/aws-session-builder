@@ -168,6 +168,29 @@
   .copy-btn:hover { background: rgba(255,255,255,0.08); }
   .copy-btn.copied { border-color: #6bcb77; color: #6bcb77; }
 
+  .slot-action-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .slot-action-row .add-slot { flex: 1; margin-top: 0; }
+
+  .rand-btn {
+    background: none;
+    border: 1px solid rgba(212,175,55,0.4);
+    color: var(--gold);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .rand-btn:hover { background: rgba(212,175,55,0.1); border-color: var(--gold); }
+
   .save-load-row {
     display: flex;
     gap: 8px;
@@ -590,11 +613,17 @@
 
     <div class="section-label">FINISHERS</div>
     <div id="finisher-slots"></div>
-    <button class="add-slot" onclick="addSlot('finisher')">+ Add Finisher Drill</button>
+    <div class="slot-action-row">
+      <button class="add-slot" onclick="addSlot('finisher')">+ Add Finisher Drill</button>
+      <button class="rand-btn" onclick="addRandomSlot('finisher')" title="Add random finisher drill">&#9861; Random</button>
+    </div>
 
     <div class="section-label">SHOOTING</div>
     <div id="shooting-slots"></div>
-    <button class="add-slot" onclick="addSlot('shooting')">+ Add Shooting Drill</button>
+    <div class="slot-action-row">
+      <button class="add-slot" onclick="addSlot('shooting')">+ Add Shooting Drill</button>
+      <button class="rand-btn" onclick="addRandomSlot('shooting')" title="Add random shooting drill">&#9861; Random</button>
+    </div>
 
     <div class="save-load-row">
       <button class="save-btn" id="save-btn" onclick="saveSession()">SAVE SESSION</button>
@@ -625,8 +654,8 @@
 <script>
 const DATA = {
   locations: ["Top of key","Free throw line","Front of rim","Wing L","Wing R","Mid wing L","Mid wing R","Corner L","Corner R","Short corner L","Short corner R","Elbow L","Elbow R","Slot L","Slot R","Block L","Block R","Layup spot L","Layup spot R"],
-  primaryMoves: ["Jab step","Shot fake","Pass fake","Rip-through","Front pivot","Reverse pivot","Onside step","Cross step"],
-  counterMoves: ["No counter","Pro hop","Euro step","Spin","Stride stop","Pump fake","Front pivot","Back pivot"],
+  primaryMoves: ["Jab step","Ball fake","Rip-through","Pivot","Onside step","Cross step"],
+  counterMoves: ["No counter","Pro hop","Euro step","Spin","Stride stop","Pump fake","Pivot"],
   prePlay: ["Catch and face up","Catch off a cut","Off a screen","Off a DHO","Live dribble"],
   shootingCounterMoves: ["No counter","Spin","Stride stop","Side step","Step back","Jump stop","Pull up","Pro hop"],
   finishes: ["Inside hand","Outside hand","Layup","Finger roll","Reverse layup","Power layup","Up and under","High glass finish","Over the top finish","Hook"],
@@ -1053,6 +1082,77 @@ function loadSession(event) {
   };
   reader.readAsText(file);
   event.target.value = '';
+}
+
+function randPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randPickOne(arr) { return [randPick(arr)]; }
+function randPickOneOrNone(arr) { return Math.random() < 0.5 ? [randPick(arr)] : []; }
+
+function setChecksExact(prefix, picks, items) {
+  items.forEach((item, i) => {
+    const cb = document.getElementById(`${prefix}-${i}`);
+    if (cb) cb.checked = picks.includes(item);
+  });
+}
+
+function randPrimaryMoves(prefix) {
+  // Rule: pick exactly one of onside step or cross step
+  // Optionally pick one more from the rest (excluding both)
+  const stepOptions = ['Onside step', 'Cross step'];
+  const chosenStep = randPick(stepOptions);
+  const rest = DATA.primaryMoves.filter(m => !stepOptions.includes(m));
+  const extra = Math.random() < 0.5 ? [randPick(rest)] : [];
+  setChecksExact(prefix, [chosenStep, ...extra], DATA.primaryMoves);
+}
+
+function addRandomSlot(type) {
+  addSlot(type);
+  const n = type === 'finisher' ? fc : sc;
+  const p = type === 'finisher' ? 'f' : 's';
+
+  setTimeout(() => {
+    if (type === 'finisher') {
+      // Location — pick one
+      setSelect(`f${n}-loc`, randPick(DATA.locations));
+
+      // Dribble — pick L or R, not both
+      const dribbleSide = Math.random() < 0.5 ? 'dl' : 'dr';
+      setSelect(`f${n}-${dribbleSide}`, randPick(DATA.dribbleCount.slice(1)));
+
+      // Pre-play — pick one or none
+      setChecksExact(`f${n}-pre`, randPickOneOrNone(DATA.prePlay), DATA.prePlay);
+
+      // Primary moves — enforced rules
+      randPrimaryMoves(`f${n}`);
+
+      // Counter — pick one or none
+      setChecksExact(`f${n}-cm`, randPickOneOrNone(DATA.counterMoves), DATA.counterMoves);
+
+      // Finish — pick exactly one
+      setChecksExact(`f${n}-fin`, randPickOne(DATA.finishes), DATA.finishes);
+
+    } else {
+      // Locations
+      setSelect(`s${n}-start`, randPick(DATA.locations));
+      setSelect(`s${n}-score`, randPick(DATA.locations));
+
+      // Dribble — pick L or R, not both
+      const dribbleSide = Math.random() < 0.5 ? 'dl' : 'dr';
+      setSelect(`s${n}-${dribbleSide}`, randPick(DATA.dribbleCount.slice(1)));
+
+      // Pre-play — pick one or none
+      setChecksExact(`s${n}-pre`, randPickOneOrNone(DATA.prePlay), DATA.prePlay);
+
+      // Primary moves — enforced rules
+      randPrimaryMoves(`s${n}`);
+
+      // Counter — pick one or none
+      setChecksExact(`s${n}-cm`, randPickOneOrNone(DATA.shootingCounterMoves), DATA.shootingCounterMoves);
+    }
+
+    // Tier — leave blank (no tier selected)
+
+  }, 60);
 }
 
 addSlot('finisher');
