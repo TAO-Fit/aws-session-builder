@@ -84,9 +84,14 @@
 
   .slot-header {
     display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .slot-header-row {
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
   }
 
   .slot-number {
@@ -118,6 +123,36 @@
   .tier-btn.active-int { background: #1a4a7a; border-color: #2a6ab0; color: #7ab4e8; }
   .tier-btn.active-adv { background: #6e2a2a; border-color: #a03a3a; color: #e87a7a; }
 
+  .slot-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .for-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: rgba(232,223,192,0.4);
+    text-transform: uppercase;
+  }
+  .pos-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(212,175,55,0.3);
+    background: none;
+    color: rgba(232,223,192,0.4);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .pos-btn.active-guard { background: #4a3a00; border-color: #d4af37; color: #d4af37; }
+  .pos-btn.active-post  { background: #2a2a4a; border-color: #8080d0; color: #a0a0e8; }
+
   .remove-slot {
     background: none;
     border: none;
@@ -136,6 +171,8 @@
   .tier-beg { background: rgba(42,110,63,0.3); color: #7ed99a; border: 1px solid #3a9e5f; }
   .tier-int { background: rgba(26,74,122,0.3); color: #7ab4e8; border: 1px solid #2a6ab0; }
   .tier-adv { background: rgba(110,42,42,0.3); color: #e87a7a; border: 1px solid #a03a3a; }
+  .tier-guard { background: rgba(74,58,0,0.4); color: #d4af37; border: 1px solid #d4af37; }
+  .tier-post  { background: rgba(42,42,74,0.4); color: #a0a0e8; border: 1px solid #8080d0; }
 
   .remove-card {
     position: absolute;
@@ -750,9 +787,40 @@ function addSlot(type) {
     xBtn.className = 'remove-slot';
     xBtn.textContent = '✕';
     xBtn.onclick = () => block.remove();
-    hdr.appendChild(num);
-    hdr.appendChild(tierToggles_f);
-    hdr.appendChild(xBtn);
+    const posMeta_f = document.createElement('div');
+    posMeta_f.className = 'slot-header-meta';
+    const forLabel_f = document.createElement('span');
+    forLabel_f.className = 'for-label';
+    forLabel_f.textContent = 'For';
+    const posToggles_f = document.createElement('div');
+    posToggles_f.className = 'tier-toggles';
+    [['Guards','active-guard'],['Posts','active-post']].forEach(([label, cls]) => {
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn';
+      btn.textContent = label;
+      btn.id = `f${n}-pos-${label}`;
+      btn.onclick = () => btn.classList.toggle(cls);
+      posToggles_f.appendChild(btn);
+    });
+    posMeta_f.appendChild(forLabel_f);
+    posMeta_f.appendChild(posToggles_f);
+
+    const row1_f = document.createElement('div');
+    row1_f.className = 'slot-header-row';
+    row1_f.appendChild(num);
+    row1_f.appendChild(xBtn);
+
+    const row2_f = document.createElement('div');
+    row2_f.className = 'slot-header-row';
+    row2_f.appendChild(tierToggles_f);
+
+    const row3_f = document.createElement('div');
+    row3_f.className = 'slot-header-row';
+    row3_f.appendChild(posMeta_f);
+
+    hdr.appendChild(row1_f);
+    hdr.appendChild(row2_f);
+    hdr.appendChild(row3_f);
     block.appendChild(hdr);
 
     block.appendChild(field('Starting Location', makeSelect(`f${n}-loc`, DATA.locations)));
@@ -797,9 +865,40 @@ function addSlot(type) {
     xBtn.className = 'remove-slot';
     xBtn.textContent = '✕';
     xBtn.onclick = () => block.remove();
-    hdr.appendChild(num);
-    hdr.appendChild(tierToggles_s);
-    hdr.appendChild(xBtn);
+    const posMeta_s = document.createElement('div');
+    posMeta_s.className = 'slot-header-meta';
+    const forLabel_s = document.createElement('span');
+    forLabel_s.className = 'for-label';
+    forLabel_s.textContent = 'For';
+    const posToggles_s = document.createElement('div');
+    posToggles_s.className = 'tier-toggles';
+    [['Guards','active-guard'],['Posts','active-post']].forEach(([label, cls]) => {
+      const btn = document.createElement('button');
+      btn.className = 'pos-btn';
+      btn.textContent = label;
+      btn.id = `s${n}-pos-${label}`;
+      btn.onclick = () => btn.classList.toggle(cls);
+      posToggles_s.appendChild(btn);
+    });
+    posMeta_s.appendChild(forLabel_s);
+    posMeta_s.appendChild(posToggles_s);
+
+    const row1_s = document.createElement('div');
+    row1_s.className = 'slot-header-row';
+    row1_s.appendChild(num);
+    row1_s.appendChild(xBtn);
+
+    const row2_s = document.createElement('div');
+    row2_s.className = 'slot-header-row';
+    row2_s.appendChild(tierToggles_s);
+
+    const row3_s = document.createElement('div');
+    row3_s.className = 'slot-header-row';
+    row3_s.appendChild(posMeta_s);
+
+    hdr.appendChild(row1_s);
+    hdr.appendChild(row2_s);
+    hdr.appendChild(row3_s);
     block.appendChild(hdr);
 
     block.appendChild(row2(
@@ -862,7 +961,9 @@ function generate() {
     const fTierLabels = ['BEG','INT','ADV'].filter(t => document.getElementById(`f${n}-tier-${t}`)?.classList.contains(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv'));
     const fPre = getChecked(`f${n}-pre`, DATA.prePlay);
     if (!v(`f${n}-loc`) && !v(`f${n}-dr`) && !v(`f${n}-dl`) && !fCounter.length && !fPre.length && !primary.length && !finishes.length) continue;
-    const fTierHtml = fTierLabels.length ? `<div class="card-tiers">${fTierLabels.map(t => `<span class="card-tier tier-${t.toLowerCase()}">${t}</span>`).join('')}</div>` : '';
+    const fTierLabels2 = fTierLabels;
+    const fPosLabels = ['Guards','Posts'].filter(p => document.getElementById(`f${n}-pos-${p}`)?.classList.contains(p === 'Guards' ? 'active-guard' : 'active-post'));
+    const fTierHtml = (fTierLabels2.length || fPosLabels.length) ? `<div class="card-tiers">${fTierLabels2.map(t => `<span class="card-tier tier-${t.toLowerCase()}">${t}</span>`).join('')}${fPosLabels.map(p => `<span class="card-tier tier-${p.toLowerCase()}">${p}</span>`).join('')}</div>` : '';
     const fCardId = `fcard-${n}`;
     finCards += `<div class="drill-card-wrap" id="${fCardId}">${fTierHtml}<button class="remove-card" onclick="document.getElementById('${fCardId}').remove()">✕</button><div class="drill-card finisher">
       ${valField(v(`f${n}-loc`), 'Starting Location')}
@@ -888,7 +989,9 @@ function generate() {
     const sTierLabels = ['BEG','INT','ADV'].filter(t => document.getElementById(`s${n}-tier-${t}`)?.classList.contains(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv'));
     const sPre = getChecked(`s${n}-pre`, DATA.prePlay);
     if (!v(`s${n}-start`) && !v(`s${n}-score`) && !v(`s${n}-dr`) && !v(`s${n}-dl`) && !sCounter.length && !sPre.length && !primary.length) continue;
-    const sTierHtml = sTierLabels.length ? `<div class="card-tiers">${sTierLabels.map(t => `<span class="card-tier tier-${t.toLowerCase()}">${t}</span>`).join('')}</div>` : '';
+    const sTierLabels2 = sTierLabels;
+    const sPosLabels = ['Guards','Posts'].filter(p => document.getElementById(`s${n}-pos-${p}`)?.classList.contains(p === 'Guards' ? 'active-guard' : 'active-post'));
+    const sTierHtml = (sTierLabels2.length || sPosLabels.length) ? `<div class="card-tiers">${sTierLabels2.map(t => `<span class="card-tier tier-${t.toLowerCase()}">${t}</span>`).join('')}${sPosLabels.map(p => `<span class="card-tier tier-${p.toLowerCase()}">${p}</span>`).join('')}</div>` : '';
     const sCardId = `scard-${n}`;
     shotCards += `<div class="drill-card-wrap" id="${sCardId}">${sTierHtml}<button class="remove-card" onclick="document.getElementById('${sCardId}').remove()">✕</button><div class="drill-card shooting">
       ${valField(v(`s${n}-start`), 'Starting Location')}
@@ -979,6 +1082,7 @@ function saveSession() {
       counter: getChecked(`f${n}-cm`, DATA.counterMoves),
       finish: getChecked(`f${n}-fin`, DATA.finishes),
       tiers: fTiers,
+      positions: ['Guards','Posts'].filter(p => document.getElementById(`f${n}-pos-${p}`)?.classList.contains(p === 'Guards' ? 'active-guard' : 'active-post')),
     });
   }
 
@@ -995,6 +1099,7 @@ function saveSession() {
       primary: getChecked(`s${n}`, DATA.primaryMoves),
       counter: getChecked(`s${n}-cm`, DATA.shootingCounterMoves),
       tiers: sTiers,
+      positions: ['Guards','Posts'].filter(p => document.getElementById(`s${n}-pos-${p}`)?.classList.contains(p === 'Guards' ? 'active-guard' : 'active-post')),
     });
   }
 
@@ -1054,6 +1159,10 @@ function loadSession(event) {
             const btn = document.getElementById(`f${n}-tier-${t}`);
             if (btn) btn.classList.add(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv');
           });
+          (data.positions || []).forEach(p => {
+            const btn = document.getElementById(`f${n}-pos-${p}`);
+            if (btn) btn.classList.add(p === 'Guards' ? 'active-guard' : 'active-post');
+          });
         }, 50);
       });
 
@@ -1072,6 +1181,10 @@ function loadSession(event) {
           (data.tiers || []).forEach(t => {
             const btn = document.getElementById(`s${n}-tier-${t}`);
             if (btn) btn.classList.add(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv');
+          });
+          (data.positions || []).forEach(p => {
+            const btn = document.getElementById(`s${n}-pos-${p}`);
+            if (btn) btn.classList.add(p === 'Guards' ? 'active-guard' : 'active-post');
           });
         }, 50);
       });
