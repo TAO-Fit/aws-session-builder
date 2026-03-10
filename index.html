@@ -96,6 +96,28 @@
     color: var(--gold);
   }
 
+  .tier-toggles {
+    display: flex;
+    gap: 5px;
+  }
+  .tier-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(212,175,55,0.3);
+    background: none;
+    color: rgba(232,223,192,0.4);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .tier-btn.active-beg { background: #2a6e3f; border-color: #3a9e5f; color: #7ed99a; }
+  .tier-btn.active-int { background: #1a4a7a; border-color: #2a6ab0; color: #7ab4e8; }
+  .tier-btn.active-adv { background: #6e2a2a; border-color: #a03a3a; color: #e87a7a; }
+
   .remove-slot {
     background: none;
     border: none;
@@ -109,6 +131,11 @@
   .remove-slot:hover { color: #ff6b6b; }
 
   .drill-card-wrap { position: relative; }
+  .card-tiers { display: flex; gap: 4px; margin-bottom: 4px; }
+  .card-tier { font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 2px 6px; border-radius: 2px; }
+  .tier-beg { background: rgba(42,110,63,0.3); color: #7ed99a; border: 1px solid #3a9e5f; }
+  .tier-int { background: rgba(26,74,122,0.3); color: #7ab4e8; border: 1px solid #2a6ab0; }
+  .tier-adv { background: rgba(110,42,42,0.3); color: #e87a7a; border: 1px solid #a03a3a; }
 
   .remove-card {
     position: absolute;
@@ -676,11 +703,25 @@ function addSlot(type) {
     const num = document.createElement('div');
     num.className = 'slot-number';
     num.textContent = `DRILL ${n}`;
+
+    const tierToggles_f = document.createElement('div');
+    tierToggles_f.className = 'tier-toggles';
+    [['BEG','active-beg'],['INT','active-int'],['ADV','active-adv']].forEach(([label, cls]) => {
+      const btn = document.createElement('button');
+      btn.className = 'tier-btn';
+      btn.textContent = label;
+      btn.dataset.tier = label;
+      btn.id = `f${n}-tier-${label}`;
+      btn.onclick = () => btn.classList.toggle(cls);
+      tierToggles_f.appendChild(btn);
+    });
+
     const xBtn = document.createElement('button');
     xBtn.className = 'remove-slot';
     xBtn.textContent = '✕';
     xBtn.onclick = () => block.remove();
     hdr.appendChild(num);
+    hdr.appendChild(tierToggles_f);
     hdr.appendChild(xBtn);
     block.appendChild(hdr);
 
@@ -708,11 +749,25 @@ function addSlot(type) {
     const num = document.createElement('div');
     num.className = 'slot-number';
     num.textContent = `DRILL ${n}`;
+
+    const tierToggles_s = document.createElement('div');
+    tierToggles_s.className = 'tier-toggles';
+    [['BEG','active-beg'],['INT','active-int'],['ADV','active-adv']].forEach(([label, cls]) => {
+      const btn = document.createElement('button');
+      btn.className = 'tier-btn';
+      btn.textContent = label;
+      btn.dataset.tier = label;
+      btn.id = `s${n}-tier-${label}`;
+      btn.onclick = () => btn.classList.toggle(cls);
+      tierToggles_s.appendChild(btn);
+    });
+
     const xBtn = document.createElement('button');
     xBtn.className = 'remove-slot';
     xBtn.textContent = '✕';
     xBtn.onclick = () => block.remove();
     hdr.appendChild(num);
+    hdr.appendChild(tierToggles_s);
     hdr.appendChild(xBtn);
     block.appendChild(hdr);
 
@@ -772,9 +827,11 @@ function generate() {
     const primary = getChecked(`f${n}`, DATA.primaryMoves);
     const finishes = getChecked(`f${n}-fin`, DATA.finishes);
     const fCounter = getChecked(`f${n}-cm`, DATA.counterMoves);
+    const fTierLabels = ['BEG','INT','ADV'].filter(t => document.getElementById(`f${n}-tier-${t}`)?.classList.contains(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv'));
     if (!v(`f${n}-loc`) && !v(`f${n}-dr`) && !v(`f${n}-dl`) && !fCounter.length && !primary.length && !finishes.length) continue;
+    const fTierHtml = fTierLabels.length ? `<div class="card-tiers">${fTierLabels.map(t => `<span class="card-tier tier-${t.toLowerCase()}">${t}</span>`).join('')}</div>` : '';
     const fCardId = `fcard-${n}`;
-    finCards += `<div class="drill-card-wrap" id="${fCardId}"><button class="remove-card" onclick="document.getElementById('${fCardId}').remove()">✕</button><div class="drill-card finisher">
+    finCards += `<div class="drill-card-wrap" id="${fCardId}">${fTierHtml}<button class="remove-card" onclick="document.getElementById('${fCardId}').remove()">✕</button><div class="drill-card finisher">
       ${valField(v(`f${n}-loc`), 'Starting Location')}
       ${v(`f${n}-dl`) ? valField(v(`f${n}-dl`) + ' dribble(s)', 'Dribble Left') : ''}
       ${v(`f${n}-dr`) ? valField(v(`f${n}-dr`) + ' dribble(s)', 'Dribble Right') : ''}
@@ -793,9 +850,11 @@ function generate() {
   for (let n = 1; n <= sc; n++) {
     const primary = getChecked(`s${n}`, DATA.primaryMoves);
     const sCounter = getChecked(`s${n}-cm`, DATA.shootingCounterMoves);
+    const sTierLabels = ['BEG','INT','ADV'].filter(t => document.getElementById(`s${n}-tier-${t}`)?.classList.contains(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv'));
     if (!v(`s${n}-start`) && !v(`s${n}-score`) && !v(`s${n}-dr`) && !v(`s${n}-dl`) && !sCounter.length && !primary.length) continue;
+    const sTierHtml = sTierLabels.length ? `<div class="card-tiers">${sTierLabels.map(t => `<span class="card-tier tier-${t.toLowerCase()}">${t}</span>`).join('')}</div>` : '';
     const sCardId = `scard-${n}`;
-    shotCards += `<div class="drill-card-wrap" id="${sCardId}"><button class="remove-card" onclick="document.getElementById('${sCardId}').remove()">✕</button><div class="drill-card shooting">
+    shotCards += `<div class="drill-card-wrap" id="${sCardId}">${sTierHtml}<button class="remove-card" onclick="document.getElementById('${sCardId}').remove()">✕</button><div class="drill-card shooting">
       ${valField(v(`s${n}-start`), 'Starting Location')}
       ${valField(v(`s${n}-score`), 'Scoring Location')}
       ${v(`s${n}-dl`) ? valField(v(`s${n}-dl`) + ' dribble(s)', 'Dribble Left') : ''}
@@ -872,6 +931,7 @@ function saveSession() {
   for (let n = 1; n <= fc; n++) {
     const block = document.getElementById(`finisher-${n}`);
     if (!block) continue;
+    const fTiers = ['BEG','INT','ADV'].filter(t => document.getElementById(`f${n}-tier-${t}`)?.classList.contains(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv'));
     session.finishers.push({
       loc: v(`f${n}-loc`),
       dr: v(`f${n}-dr`),
@@ -879,12 +939,14 @@ function saveSession() {
       primary: getChecked(`f${n}`, DATA.primaryMoves),
       counter: getChecked(`f${n}-cm`, DATA.counterMoves),
       finish: getChecked(`f${n}-fin`, DATA.finishes),
+      tiers: fTiers,
     });
   }
 
   for (let n = 1; n <= sc; n++) {
     const block = document.getElementById(`shooting-${n}`);
     if (!block) continue;
+    const sTiers = ['BEG','INT','ADV'].filter(t => document.getElementById(`s${n}-tier-${t}`)?.classList.contains(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv'));
     session.shooting.push({
       start: v(`s${n}-start`),
       score: v(`s${n}-score`),
@@ -892,6 +954,7 @@ function saveSession() {
       dl: v(`s${n}-dl`),
       primary: getChecked(`s${n}`, DATA.primaryMoves),
       counter: getChecked(`s${n}-cm`, DATA.shootingCounterMoves),
+      tiers: sTiers,
     });
   }
 
@@ -946,6 +1009,10 @@ function loadSession(event) {
           setChecked(`f${n}`, DATA.primaryMoves, data.primary || []);
           setChecked(`f${n}-cm`, DATA.counterMoves, data.counter || []);
           setChecked(`f${n}-fin`, DATA.finishes, data.finish || []);
+          (data.tiers || []).forEach(t => {
+            const btn = document.getElementById(`f${n}-tier-${t}`);
+            if (btn) btn.classList.add(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv');
+          });
         }, 50);
       });
 
@@ -960,6 +1027,10 @@ function loadSession(event) {
           setSelect(`s${n}-dl`, data.dl);
           setChecked(`s${n}`, DATA.primaryMoves, data.primary || []);
           setChecked(`s${n}-cm`, DATA.shootingCounterMoves, data.counter || []);
+          (data.tiers || []).forEach(t => {
+            const btn = document.getElementById(`s${n}-tier-${t}`);
+            if (btn) btn.classList.add(t === 'BEG' ? 'active-beg' : t === 'INT' ? 'active-int' : 'active-adv');
+          });
         }, 50);
       });
 
